@@ -1,38 +1,69 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Food Recipe Generator</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Selector</title>
 </head>
 <body>
-    <h1>Food Recipe Generator</h1>
-    <form method="post">
-        <h2>Select Ingredients:</h2>
-        <input type="checkbox" name="ingredients" value="pasta"> Pasta<br>
-        <input type="checkbox" name="ingredients" value="eggs"> Eggs<br>
-        <input type="checkbox" name="ingredients" value="bacon"> Bacon<br>
-        <input type="checkbox" name="ingredients" value="parmesan cheese"> Parmesan Cheese<br>
-        <input type="checkbox" name="ingredients" value="black pepper"> Black Pepper<br>
-        <input type="checkbox" name="ingredients" value="chicken breast"> Chicken Breast<br>
-        <input type="checkbox" name="ingredients" value="bell peppers"> Bell Peppers<br>
-        <input type="checkbox" name="ingredients" value="broccoli"> Broccoli<br>
-        <input type="checkbox" name="ingredients" value="onion"> Onion<br>
-        <input type="checkbox" name="ingredients" value="soy sauce"> Soy Sauce<br>
-        <input type="checkbox" name="ingredients" value="sesame oil"> Sesame Oil<br>
-        <input type="checkbox" name="ingredients" value="butter"> Butter<br>
-        <input type="checkbox" name="ingredients" value="sugar"> Sugar<br>
-        <input type="checkbox" name="ingredients" value="flour"> Flour<br>
-        <input type="checkbox" name="ingredients" value="vanilla extract"> Vanilla Extract<br>
-        <input type="checkbox" name="ingredients" value="chocolate chips"> Chocolate Chips<br>
-        <!-- Add more ingredient checkboxes as needed -->
-        <button type="submit">Generate Recipes</button>
-    </form>
-    {% if suggested_recipes %}
-        <h2>Suggested Recipes:</h2>
-        <ul>
-            {% for recipe in suggested_recipes %}
-                <li>{{ recipe }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
+    <h1>Recipe Selector</h1>
+    
+    <label for="ingredientSelect">Select Ingredients:</label>
+    <select id="ingredientSelect">
+        <option value="">Select an ingredient...</option>
+        <!-- Populate dropdown options using data from unique_incredients.csv -->
+        {% for ingredient in unique_ingredients %}
+            <option value="{{ ingredient }}">{{ ingredient }}</option>
+        {% endfor %}
+    </select>
+    <button id="addIngredientBtn">Add Ingredient</button>
+    
+    <h2>Selected Ingredients:</h2>
+    <ul id="selectedIngredients"></ul>
+    
+    <button id="submitBtn">Get Recipes</button>
+    <button id="resetBtn">Reset Ingredients</button>
+    
+    <h2>Recipes:</h2>
+    <ul id="recipeList"></ul>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            const selectedIngredients = [];
+
+            $("#addIngredientBtn").click(function () {
+                const selectedIngredient = $("#ingredientSelect").val();
+                if (selectedIngredient && !selectedIngredients.includes(selectedIngredient)) {
+                    selectedIngredients.push(selectedIngredient);
+                    $("#selectedIngredients").append(`<li>${selectedIngredient}</li>`);
+                }
+            });
+
+            $("#submitBtn").click(function () {
+                // Send selectedIngredients to Flask backend
+                $.ajax({
+                    type: "POST",
+                    url: "/get_recipes",
+                    data: JSON.stringify({ ingredients: selectedIngredients }),
+                    contentType: "application/json",
+                    success: function (data) {
+                        // Display recipes
+                        $("#recipeList").empty();
+                        data.recipes.forEach(function (recipe) {
+                            $("#recipeList").append(`<li>${recipe}</li>`);
+                        });
+                    },
+                });
+            });
+            $("#resetBtn").click(function () {
+                // Reset selected ingredients and the displayed list
+                selectedIngredients.length = 0;
+                $("#selectedIngredients").empty();
+                $("#recipeList").empty();
+            });
+        });
+
+    </script>
 </body>
 </html>

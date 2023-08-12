@@ -1,38 +1,27 @@
 from flask import Flask, render_template, request
 import pandas as pd
-import random
-import os
-import csv
-print("Current working directory:", os.getcwd())
 
 app = Flask(__name__)
 
-# Load the recipe dataset
-recipes_df = csv.reader('./data.csv')
+# Load your dataset into a Pandas DataFrame
+df = pd.read_csv("main.csv")
+df['ingredients'] = df['ingredients'].apply(eval)  # Convert the string representation back to lists
 
-@app.route('/', methods=['GET', 'POST'])
+# Load the ingredients list from another CSV file
+ingredients_list = pd.read_csv("unique_ingredients.csv")["ingredient"].tolist()
+
+@app.route("/", methods=["GET", "POST"])
 def index():
-    if request.method == 'POST':
-        selected_ingredients = request.form.getlist('ingredients')
-        suggested_recipes = suggest_recipes(selected_ingredients)
-        return render_template('index.html', suggested_recipes=suggested_recipes)
-    
-    return render_template('index.html', suggested_recipes=None)
+    if request.method == "POST":
+        selected_ingredients = [ingredient.lower() for ingredient in request.form.getlist("ingredients")]
+        suggested_recipes = generate_suggested_recipes(selected_ingredients)
+        return render_template("index.html", ingredients=ingredients_list, suggested_recipes=suggested_recipes)
+    return render_template("index.html", ingredients=ingredients_list, suggested_recipes=[])
 
-def suggest_recipes(selected_ingredients):
-    suggested_recipes = []
+def generate_suggested_recipes(selected_ingredients):
+    filtered_df = df[df["ingredients"].apply(lambda x: all(ingredient.lower() in x for ingredient in selected_ingredients))]
+    suggested_recipes = filtered_df[["name", "description"]].values.tolist()
+    return suggested_recipes
 
-    with open('data.csv', newline='', encoding='utf-8') as csvfile:
-        csvreader = csv.reader(csvfile)
-        next(csvreader)  # Skip the header row
-        for row in csvreader:
-            recipe_ingredients = row[1].split(',')
-            if all(ingredient in recipe_ingredients for ingredient in selected_ingredients):
-                suggested_recipes.append({'recipe_name': row[0], 'ingredients': row[1]})
-
-    return suggested_recipes[:5]  # Return a limited number of suggestions
-
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
