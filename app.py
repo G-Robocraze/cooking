@@ -21,9 +21,7 @@ def index():
     unique_ingredients = pd.read_csv("unique_ingredients.csv")["ingredient"].tolist()
     unique_ingredients.sort()  # Sort the ingredients alphabetically
     return render_template('index.html', unique_ingredients=unique_ingredients)
-# @app.route("/", methods=["GET"])
-# def index():
-#     return render_template("index.html", unique_ingredients=unique_ingredients)
+
 
 @app.route("/get_recipes", methods=["POST"])
 def get_recipes_route():
