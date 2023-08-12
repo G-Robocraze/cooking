@@ -16,10 +16,14 @@ def get_recipes(selected_ingredients):
     filtered_recipes = recipes_data[recipes_data["ingredients"].apply(lambda x: all(ing in x for ing in selected_ingredients))]
     suggested_recipes = filtered_recipes[["name", "steps","ingredients"]].values.tolist()
     return suggested_recipes
-
-@app.route("/", methods=["GET"])
+@app.route('/')
 def index():
-    return render_template("index.html", unique_ingredients=unique_ingredients)
+    unique_ingredients = pd.read_csv("unique_ingredients.csv")["ingredient"].tolist()
+    unique_ingredients.sort()  # Sort the ingredients alphabetically
+    return render_template('index.html', unique_ingredients=unique_ingredients)
+# @app.route("/", methods=["GET"])
+# def index():
+#     return render_template("index.html", unique_ingredients=unique_ingredients)
 
 @app.route("/get_recipes", methods=["POST"])
 def get_recipes_route():
